@@ -9,6 +9,7 @@ and LogManager states that the database is still down.
 
 from sqlalchemy.exc import SQLAlchemyError
 from .subject import Subject
+from sqlalchemy import text
 
 class HealthChecker(Subject):
     def __init__(self, engines:dict):
@@ -26,10 +27,11 @@ class HealthChecker(Subject):
     def ping(self, engine):
         try:
             with engine.connect() as conn:
-                conn.execute("SELECT 1")
+                conn.execute(text("SELECT 1"))
             return True
-        except SQLAlchemyError:
-            return False 
+        except SQLAlchemyError as e:
+            print("PING ERROR:", e)   
+            return False
     
     def run_check(self):
         """
