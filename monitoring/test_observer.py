@@ -19,11 +19,6 @@ params = urllib.parse.quote_plus(
 
 real_engine = create_engine(f"mssql+pyodbc:///?odbc_connect={params}")
 
-# test
-with real_engine.connect() as conn:
-    result = conn.execute(text("SELECT 1")).fetchone()
-    print("CONNECTED:", result)
-
 fake_engine = create_engine(
     "mysql+pymysql://root:password@localhost:9999/notexisting"
 )
