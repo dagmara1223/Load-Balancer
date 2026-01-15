@@ -1,0 +1,274 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:146.0) Gecko/20100101 Firefox/146.0" version="29.3.1">
+  <diagram name="Page-1" id="UOfchCxdjjze0tS1L3NH">
+    <mxGraphModel dx="4132" dy="2538" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="sPqD7F7GvqFHgkNUv4dS-1" parent="1" style="package;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=10;" value="&lt;div align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 36px;&quot;&gt;&lt;b&gt;Clients&lt;/b&gt;&lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;- Browser / CLI / Tests&lt;br&gt;- Connects to Demo App&lt;/font&gt;" vertex="1">
+          <mxGeometry height="160" width="310" x="-690" y="-240" as="geometry" />
+        </mxCell>
+        <mxCell id="sPqD7F7GvqFHgkNUv4dS-2" parent="1" style="package;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=10;fontStyle=1;" value="&lt;div&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;b&gt;App Server (host, Python process)&lt;/b&gt;&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;span style=&quot;font-weight: normal;&quot;&gt;&lt;font&gt;Python 3.x, libraries: SQLAlchemy,&lt;/font&gt;&lt;/span&gt;&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;span style=&quot;font-weight: normal;&quot;&gt;&lt;font&gt;requests, pymysql;&amp;nbsp; FastAPI + uvicorn&lt;/font&gt;&lt;/span&gt;&lt;/font&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="1000" width="1262.05" x="-810" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="sPqD7F7GvqFHgkNUv4dS-3" parent="sPqD7F7GvqFHgkNUv4dS-2" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=5;fillColor=#fff2cc;strokeColor=#d6b656;" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;b&gt;Demo App (presentation)&lt;/b&gt;&lt;/font&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;br&gt;&lt;i&gt;demo_app/main.py&lt;br&gt;demo_app/api_endpoints.py&lt;/i&gt;&lt;br&gt;- Exposes HTTP REST (port 8000)&lt;br&gt;&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;- Uses SQLAlchemy for DB access&lt;/font&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="221.9230769230769" width="612.05" x="490" y="41.81318681318681" as="geometry" />
+        </mxCell>
+        <mxCell id="sPqD7F7GvqFHgkNUv4dS-4" parent="sPqD7F7GvqFHgkNUv4dS-2" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=5;fillColor=#fff2cc;strokeColor=#d6b656;" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;b&gt;SQLInterceptor (in-process)&lt;/b&gt;&lt;br&gt;&lt;/font&gt;&lt;hr&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;SQLInterceptor&lt;br&gt;&lt;i&gt;interceptor/sqlalchemy_listener.py&lt;br&gt;interceptor/query_parser.py&lt;/i&gt;&lt;br&gt;- Registered on SQLAlchemy event: before_cursor_execute&lt;br&gt;&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;- Classifies SQL: SELECT vs DML,&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;&amp;nbsp;forwards to Load Balancer&lt;/font&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="285.7142857142857" width="596.04" x="490" y="339.99736263736264" as="geometry" />
+        </mxCell>
+        <mxCell id="sPqD7F7GvqFHgkNUv4dS-5" parent="sPqD7F7GvqFHgkNUv4dS-2" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=5;fillColor=#fff2cc;strokeColor=#d6b656;" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;b&gt;LoadBalancer «Singleton» (in-process)&lt;/b&gt;&lt;br&gt;&lt;/font&gt;&lt;hr&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;i&gt;load_balancer/load_balancer.py&lt;/i&gt;&lt;br&gt;- route_select(query) -&amp;gt; returns single Engine (strategy)&lt;br&gt;- route_dml(query) -&amp;gt; broadcast to enabled Engines&lt;br&gt;- disable_node(name) / enable_node(name)&lt;br&gt;- WeightedRoundRobin implemented&lt;/font&gt;" vertex="1">
+          <mxGeometry height="285.7142857142857" width="578.31" x="506.87" y="694.7383458646617" as="geometry" />
+        </mxCell>
+        <mxCell id="sPqD7F7GvqFHgkNUv4dS-8" parent="sPqD7F7GvqFHgkNUv4dS-2" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=5;fillColor=#fff2cc;strokeColor=#d6b656;" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;b&gt;EngineFactory (startup)&lt;/b&gt;&lt;/font&gt;&lt;hr&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;i&gt;connection/engine_factory.py&lt;/i&gt;&lt;br&gt;- creates SQLAlchemy.Engine instances for each DB&lt;br&gt;&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;- calls LoadBalancer.add_node(name, engine, weight) at startup&lt;/font&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="238.39" width="440" x="20" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="sPqD7F7GvqFHgkNUv4dS-23" edge="1" parent="sPqD7F7GvqFHgkNUv4dS-2" source="sPqD7F7GvqFHgkNUv4dS-8" style="edgeStyle=orthogonalEdgeStyle;html=1;align=center;verticalAlign=middle;endArrow=block;endFill=1;rounded=0;strokeWidth=3;" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;add_node(name, engine, weight)&lt;/font&gt;">
+          <mxGeometry relative="1" x="-0.0034" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="70" y="876.2886597938143" />
+              <mxPoint x="370" y="876.2886597938143" />
+              <mxPoint x="370" y="824.742268041237" />
+            </Array>
+            <mxPoint x="507" y="824.742268041237" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jyDA6tSNWCQtpRpSOxXM-1" parent="sPqD7F7GvqFHgkNUv4dS-2" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=5;fillColor=#fff2cc;strokeColor=#d6b656;" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;b&gt;ConfigLoader (startup)&lt;/b&gt;&lt;br&gt;&lt;/font&gt;&lt;hr&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;i&gt;config/config_loader.py&lt;br&gt;config/database_config.yaml&lt;/i&gt;&lt;br&gt;- loads cfg (database_config.yaml)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="150" width="440" x="20" y="263.74" as="geometry" />
+        </mxCell>
+        <mxCell id="jyDA6tSNWCQtpRpSOxXM-2" edge="1" parent="sPqD7F7GvqFHgkNUv4dS-2" source="jyDA6tSNWCQtpRpSOxXM-1" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeWidth=3;" target="sPqD7F7GvqFHgkNUv4dS-8" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="400" y="570" as="sourcePoint" />
+            <mxPoint x="450" y="520" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jyDA6tSNWCQtpRpSOxXM-3" connectable="0" parent="jyDA6tSNWCQtpRpSOxXM-2" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;font style=&quot;font-size: 23px;&quot;&gt;cfg&lt;/font&gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.1131" y="6" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jyDA6tSNWCQtpRpSOxXM-6" edge="1" parent="sPqD7F7GvqFHgkNUv4dS-2" source="sPqD7F7GvqFHgkNUv4dS-5" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.308;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;strokeWidth=2;" target="sPqD7F7GvqFHgkNUv4dS-3" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="1130" y="783" />
+              <mxPoint x="1130" y="210" />
+            </Array>
+            <mxPoint x="1100" y="650" as="sourcePoint" />
+            <mxPoint x="1150" y="600" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jyDA6tSNWCQtpRpSOxXM-13" parent="sPqD7F7GvqFHgkNUv4dS-2" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;div&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;disable&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;node&lt;/font&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="40" width="110" x="1070" y="860" as="geometry" />
+        </mxCell>
+        <mxCell id="jyDA6tSNWCQtpRpSOxXM-18" parent="sPqD7F7GvqFHgkNUv4dS-2" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;re-enable after replay&lt;/font&gt;" vertex="1">
+          <mxGeometry height="60" width="140" x="1030" y="920.45" as="geometry" />
+        </mxCell>
+        <mxCell id="sPqD7F7GvqFHgkNUv4dS-9" parent="1" style="package;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=10;fontStyle=1;" value="&lt;div&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;b&gt;Monitoring &amp;amp; Recovery&lt;/b&gt;&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;font-size: 27px;&quot;&gt;Local persistent storage: /var/lib/command_logs/&lt;/font&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="1200" width="870" x="360" y="10" as="geometry" />
+        </mxCell>
+        <mxCell id="sPqD7F7GvqFHgkNUv4dS-10" parent="sPqD7F7GvqFHgkNUv4dS-9" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=5;fillColor=#ffe6cc;strokeColor=#d79b00;" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;b&gt;HealthChecker «Subject»&lt;/b&gt;&lt;br&gt;&lt;/font&gt;&lt;hr&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;i&gt;monitoring/health_checker.py&lt;/i&gt;&lt;br&gt;- pings DBs (SELECT 1) every Xs (configurable)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="168.98" width="370" x="80" y="111.02" as="geometry" />
+        </mxCell>
+        <mxCell id="sPqD7F7GvqFHgkNUv4dS-11" parent="sPqD7F7GvqFHgkNUv4dS-9" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=5;fillColor=#ffe6cc;strokeColor=#d79b00;" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;b&gt;FailoverManager «Observer»&lt;/b&gt;&lt;br&gt;&lt;/font&gt;&lt;hr&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;i&gt;monitoring/failover_manager.py&lt;/i&gt;&lt;br&gt;- update(event) -&amp;gt; disable_node(name) / enable_node(name)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="187.29152542372879" width="366.49698113207546" x="86.60377358490565" y="305.08474576271186" as="geometry" />
+        </mxCell>
+        <mxCell id="sPqD7F7GvqFHgkNUv4dS-13" parent="sPqD7F7GvqFHgkNUv4dS-9" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=5;fillColor=#ffe6cc;strokeColor=#d79b00;" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;b&gt;CommandLogManager&lt;/b&gt;&lt;/font&gt;&lt;hr&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;i&gt;replication/command_log.py&lt;/i&gt;&lt;br&gt;- add(command, db), load(db), replay(db, engine)&lt;br&gt;- persists to /var/lib/command_logs/command_dbX.json&lt;/font&gt;" vertex="1">
+          <mxGeometry height="238.31" width="360" x="90" y="701.69" as="geometry" />
+        </mxCell>
+        <mxCell id="sPqD7F7GvqFHgkNUv4dS-12" parent="sPqD7F7GvqFHgkNUv4dS-9" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=5;fillColor=#ffe6cc;strokeColor=#d79b00;" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;b&gt;RecoveryManager «Observer»&lt;/b&gt;&lt;br&gt;&lt;/font&gt;&lt;hr&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;i&gt;replication/recovery_manager.py&lt;/i&gt;&lt;br&gt;- update(UP) -&amp;gt; command_log.replay(engine)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="162.49830508474574" width="366.49698113207546" x="86.60377358490565" y="508.47457627118644" as="geometry" />
+        </mxCell>
+        <mxCell id="jyDA6tSNWCQtpRpSOxXM-8" edge="1" parent="sPqD7F7GvqFHgkNUv4dS-9" source="sPqD7F7GvqFHgkNUv4dS-10" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=3;" target="sPqD7F7GvqFHgkNUv4dS-11" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="480" y="240" />
+              <mxPoint x="480" y="399" />
+            </Array>
+            <mxPoint x="230" y="530" as="sourcePoint" />
+            <mxPoint x="280" y="480" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jyDA6tSNWCQtpRpSOxXM-10" parent="sPqD7F7GvqFHgkNUv4dS-9" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;notify(event:{ &quot;db&quot;: &quot;&amp;lt;name&amp;gt;&quot;, &quot;status&quot;: &quot;UP|DOWN&quot; })&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="220" x="453.1" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="jyDA6tSNWCQtpRpSOxXM-14" edge="1" parent="sPqD7F7GvqFHgkNUv4dS-9" source="sPqD7F7GvqFHgkNUv4dS-12" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0.999;entryY=0.119;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=3;" target="sPqD7F7GvqFHgkNUv4dS-13" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="520" y="630" />
+              <mxPoint x="520" y="730" />
+            </Array>
+            <mxPoint x="160" y="510" as="sourcePoint" />
+            <mxPoint x="210" y="460" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jyDA6tSNWCQtpRpSOxXM-15" parent="sPqD7F7GvqFHgkNUv4dS-9" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;div&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;command_log.&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;replay(engine)&lt;/font&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="90" width="200" x="520" y="580.97" as="geometry" />
+        </mxCell>
+        <mxCell id="sPqD7F7GvqFHgkNUv4dS-15" parent="sPqD7F7GvqFHgkNUv4dS-9" style="shape=folder;fontStyle=1;spacingTop=10;html=1;whiteSpace=wrap;align=left;verticalAlign=top;spacingLeft=5;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="&lt;div&gt;&lt;font style=&quot;font-size: 26px;&quot;&gt;&lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;font-size: 26px;&quot;&gt;Command Logs&lt;/font&gt;&lt;/div&gt;&lt;font style=&quot;font-size: 26px; font-weight: normal;&quot;&gt;- &lt;i&gt;/var/lib/command_logs/command_db1.json, command_db2.json, ...&lt;/i&gt;&lt;br&gt;- Format: JSON (serialized Command objects)&lt;br&gt;- Read/Write by CommandLogManager&lt;/font&gt;" vertex="1">
+          <mxGeometry height="220" width="590" x="65" y="950" as="geometry" />
+        </mxCell>
+        <mxCell id="sPqD7F7GvqFHgkNUv4dS-27" edge="1" parent="sPqD7F7GvqFHgkNUv4dS-9" source="sPqD7F7GvqFHgkNUv4dS-13" style="edgeStyle=orthogonalEdgeStyle;html=1;align=center;verticalAlign=middle;endArrow=open;endFill=0;dashed=0;startArrow=open;startFill=0;rounded=0;exitX=1;exitY=0.25;exitDx=0;exitDy=0;strokeWidth=3;" target="sPqD7F7GvqFHgkNUv4dS-15" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;write/read JSON&lt;/font&gt;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="489" y="760" />
+              <mxPoint x="700" y="760" />
+              <mxPoint x="700" y="1060" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sPqD7F7GvqFHgkNUv4dS-20" edge="1" parent="1" source="sPqD7F7GvqFHgkNUv4dS-1" style="edgeStyle=orthogonalEdgeStyle;html=1;align=center;verticalAlign=middle;endArrow=block;endFill=1;strokeWidth=3;rounded=0;" target="sPqD7F7GvqFHgkNUv4dS-3" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;HTTP/REST (JSON) -&amp;gt; port 8000&amp;nbsp;&lt;/font&gt;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-960" y="190" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sPqD7F7GvqFHgkNUv4dS-21" edge="1" parent="1" source="sPqD7F7GvqFHgkNUv4dS-3" style="edgeStyle=orthogonalEdgeStyle;html=1;align=center;verticalAlign=middle;endArrow=block;endFill=1;strokeWidth=3;rounded=0;dashed=1;" target="sPqD7F7GvqFHgkNUv4dS-4" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;SQLAlchemy event: before_cursor_execute&lt;/font&gt;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-30" y="290" />
+              <mxPoint x="-30" y="290" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sPqD7F7GvqFHgkNUv4dS-22" edge="1" parent="1" source="sPqD7F7GvqFHgkNUv4dS-4" style="edgeStyle=orthogonalEdgeStyle;html=1;align=center;verticalAlign=middle;endArrow=block;endFill=1;strokeWidth=3;rounded=0;dashed=1;" target="sPqD7F7GvqFHgkNUv4dS-5" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;route_select(query) / route_dml(query)&lt;/font&gt;">
+          <mxGeometry relative="1" x="0.0432" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="160" y="390" />
+              <mxPoint x="160" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sPqD7F7GvqFHgkNUv4dS-24" edge="1" parent="1" source="sPqD7F7GvqFHgkNUv4dS-10" style="edgeStyle=orthogonalEdgeStyle;html=1;align=center;verticalAlign=middle;endArrow=block;endFill=1;strokeWidth=3;rounded=0;entryX=0.002;entryY=0.18;entryDx=0;entryDy=0;entryPerimeter=0;" target="xkhaXWDtQXnTgC-5RbER-2" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;SQL/TCP SELECT 1 (health-check)&lt;/font&gt;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1400" y="133" />
+            </Array>
+            <mxPoint x="1200" y="253.33333333333348" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sPqD7F7GvqFHgkNUv4dS-25" edge="1" parent="1" source="sPqD7F7GvqFHgkNUv4dS-10" style="edgeStyle=orthogonalEdgeStyle;html=1;align=center;verticalAlign=middle;endArrow=block;endFill=1;strokeWidth=3;rounded=0;entryX=0;entryY=0;entryDx=0;entryDy=52.5;entryPerimeter=0;" target="xkhaXWDtQXnTgC-5RbER-9" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="950" y="170" />
+              <mxPoint x="1080" y="170" />
+              <mxPoint x="1080" y="613" />
+            </Array>
+            <mxPoint x="1385" y="290.8000000000002" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sPqD7F7GvqFHgkNUv4dS-26" edge="1" parent="1" source="sPqD7F7GvqFHgkNUv4dS-10" style="edgeStyle=orthogonalEdgeStyle;html=1;align=center;verticalAlign=middle;endArrow=block;endFill=1;strokeWidth=3;rounded=0;entryX=0;entryY=0;entryDx=0;entryDy=52.5;entryPerimeter=0;" target="xkhaXWDtQXnTgC-5RbER-7" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="930" y="150" />
+              <mxPoint x="1130" y="150" />
+              <mxPoint x="1130" y="423" />
+              <mxPoint x="1200" y="423" />
+            </Array>
+            <mxPoint x="1200" y="534.8333333333335" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="xkhaXWDtQXnTgC-5RbER-2" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#e1d5e7;strokeColor=#9673a6;" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;b&gt;DB Node: db1&lt;/b&gt;&lt;br&gt;- SQL DB (SQLite/PostgreSQL&lt;/font&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;)&lt;br&gt;- Protocol: -, local file IO / SQL over TCP&lt;br&gt;- Port: none/5432 (PostgresSQL)&lt;br&gt;- Accessed by SQLAlchemy.Engine from App Server / Monitoring&lt;/font&gt;" vertex="1">
+          <mxGeometry height="280" width="450" x="1420" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="xkhaXWDtQXnTgC-5RbER-7" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#e1d5e7;strokeColor=#9673a6;" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;b&gt;DB Node: db2&lt;/b&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;br&gt;- SQL DB (SQLite/PostgreSQL&lt;/font&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;)&lt;br&gt;- Protocol: -, local file IO / SQL over TCP&lt;br&gt;- Port: none/5432 (PostgresSQL)&lt;br&gt;- Accessed by SQLAlchemy.Engine from App Server / Monitoring&lt;/font&gt;&lt;/font&gt;" vertex="1">
+          <mxGeometry height="300" width="450" x="1420" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="xkhaXWDtQXnTgC-5RbER-9" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#e1d5e7;strokeColor=#9673a6;" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;b&gt;DB Node: db3&lt;/b&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;br&gt;- SQL DB (SQLite/PostgreSQL&lt;/font&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;)&lt;br&gt;- Protocol: -, local file IO / SQL over TCP&lt;br&gt;- Port: none/5432 (PostgresSQL)&lt;br&gt;- Accessed by SQLAlchemy.Engine from App Server / Monitoring&lt;/font&gt;&lt;/font&gt;" vertex="1">
+          <mxGeometry height="280" width="440" x="1425" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="xkhaXWDtQXnTgC-5RbER-11" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;entryX=0.423;entryY=0.017;entryDx=0;entryDy=0;entryPerimeter=0;strokeWidth=3;" target="xkhaXWDtQXnTgC-5RbER-2" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="320" y="110" />
+              <mxPoint x="340" y="110" />
+              <mxPoint x="340" y="-40" />
+              <mxPoint x="1610" y="-30" />
+            </Array>
+            <mxPoint x="290" y="110" as="sourcePoint" />
+            <mxPoint x="1390" y="150" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="xkhaXWDtQXnTgC-5RbER-12" connectable="0" parent="xkhaXWDtQXnTgC-5RbER-11" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;SELECT -&amp;gt; 1 node (weighted RR)&lt;/font&gt;" vertex="1">
+          <mxGeometry relative="1" x="0.4987" y="-3" as="geometry">
+            <mxPoint x="-1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jyDA6tSNWCQtpRpSOxXM-7" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;autosize=1;resizable=0;" value="&lt;font style=&quot;font-size: 22px;&quot;&gt;(SELECT -&amp;gt; single chosen node; DML -&amp;gt; broadcast to enabled nodes)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="40" width="710" x="930" y="-90" as="geometry" />
+        </mxCell>
+        <mxCell id="jyDA6tSNWCQtpRpSOxXM-11" edge="1" parent="1" source="sPqD7F7GvqFHgkNUv4dS-11" style="endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=3;" target="sPqD7F7GvqFHgkNUv4dS-5" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="350" y="409" />
+              <mxPoint x="350" y="848" />
+            </Array>
+            <mxPoint x="480" y="600" as="sourcePoint" />
+            <mxPoint x="530" y="550" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jyDA6tSNWCQtpRpSOxXM-9" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;strokeWidth=3;" target="sPqD7F7GvqFHgkNUv4dS-12" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="840" y="559" />
+            </Array>
+            <mxPoint x="840" y="400" as="sourcePoint" />
+            <mxPoint x="870" y="520" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jyDA6tSNWCQtpRpSOxXM-16" edge="1" parent="1" source="sPqD7F7GvqFHgkNUv4dS-8" style="endArrow=classic;html=1;rounded=0;exitX=0.062;exitY=0.999;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" target="sPqD7F7GvqFHgkNUv4dS-10" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="-760" y="1060" />
+              <mxPoint x="370" y="1060" />
+              <mxPoint x="370" y="164" />
+            </Array>
+            <mxPoint x="-230" y="680" as="sourcePoint" />
+            <mxPoint x="-180" y="630" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jyDA6tSNWCQtpRpSOxXM-17" edge="1" parent="1" source="sPqD7F7GvqFHgkNUv4dS-12" style="endArrow=classic;html=1;rounded=0;exitX=0;exitY=0.25;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;strokeWidth=3;" target="sPqD7F7GvqFHgkNUv4dS-5" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="390" y="559" />
+              <mxPoint x="390" y="919" />
+            </Array>
+            <mxPoint x="90" y="690" as="sourcePoint" />
+            <mxPoint x="140" y="640" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jyDA6tSNWCQtpRpSOxXM-19" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;strokeWidth=3;strokeColor=light-dark(#9a9996, #ededed);" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="880" y="730" as="sourcePoint" />
+            <mxPoint x="1420" y="730" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jyDA6tSNWCQtpRpSOxXM-20" edge="1" parent="1" style="endArrow=none;html=1;rounded=0;strokeWidth=4;fillColor=#d5e8d4;strokeColor=#82b366;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="1270" y="-53" as="sourcePoint" />
+            <mxPoint x="1310" y="-53" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jyDA6tSNWCQtpRpSOxXM-21" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=3;opacity=50;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="1660" y="-30" />
+            </Array>
+            <mxPoint x="1610" y="-30" as="sourcePoint" />
+            <mxPoint x="1656" y="330" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jyDA6tSNWCQtpRpSOxXM-23" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;entryX=0.648;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=3;opacity=50;" target="xkhaXWDtQXnTgC-5RbER-9" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="1720" y="-30" />
+            </Array>
+            <mxPoint x="1660" y="-30" as="sourcePoint" />
+            <mxPoint x="1716" y="352" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
