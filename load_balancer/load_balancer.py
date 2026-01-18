@@ -1,72 +1,70 @@
 from threading import Lock
-from typing import List, Dict, Any
-import itertools
+from typing import Dict, List
+from load_balancer.strategies import ISelectionStrategy, WeightedRoundRobinStrategy, RoundRobinStrategy, LeastTimeStrategy
+from load_balancer.node_info import NodeInfo
+
 
 class LoadBalancer:
     _instance = None
-    _lock = Lock()  # ensure thread-safe singleton
+    _instance_lock = Lock()
 
     def __new__(cls, *args, **kwargs):
-        with cls._lock:
+        with cls._instance_lock:
             if cls._instance is None:
                 cls._instance = super().__new__(cls)
-                cls._instance._initialized = False
         return cls._instance
 
-    def __init__(self):
-        if self._initialized:
+    def __init__(self, strategy: ISelectionStrategy | None = None):
+        if hasattr(self, "_initialized"):
             return
-        self.nodes: Dict[str, Dict[str, Any]] = {}  # node_name -> {engine, enabled}
-        self._rr_iter = None  # round-robin iterator
+
+        self._nodes: Dict[str, NodeInfo] = {}
+        self._lock = Lock()
+        self._strategy = strategy or WeightedRoundRobinStrategy()
         self._initialized = True
 
-    # ----------------------
-    # Node management
-    # ----------------------
+    # Node management methods
+    
     def add_node(self, name: str, engine, weight: int = 1):
-        self.nodes[name] = {"engine": engine, "enabled": True, "weight": weight}
-        self._update_rr_iter()
-        print(f"[LoadBalancer] Added node '{name}' with weight {weight}")
-
+        with self._lock:
+            self._nodes[name] = NodeInfo(name, engine, weight)
 
     def remove_node(self, name: str):
-        if name in self.nodes:
-            del self.nodes[name]
-            self._update_rr_iter()
-        print(f"[LoadBalancer] Removed node '{name}'")
+        with self._lock:
+            self._nodes.pop(name, None)
 
     def disable_node(self, name: str):
-        if name in self.nodes:
-            self.nodes[name]["enabled"] = False
-            self._update_rr_iter()
-        print(f"[LoadBalancer] Disabled node '{name}'")
+        with self._lock:
+            if name in self._nodes:
+                self._nodes[name].enabled = False
 
     def enable_node(self, name: str):
-        if name in self.nodes:
-            self.nodes[name]["enabled"] = True
-            self._update_rr_iter()
-        print(f"[LoadBalancer] Enabled node '{name}'")
+        with self._lock:
+            if name in self._nodes:
+                self._nodes[name].enabled = True
 
-    def _update_rr_iter(self):
-        """Create weighted round-robin iterator only with enabled nodes"""
-        weighted_nodes: List[str] = []
-        for name, info in self.nodes.items():
-            if info["enabled"]:
-                weighted_nodes.extend([name] * info.get("weight", 1))
-        self._rr_iter = itertools.cycle(weighted_nodes) if weighted_nodes else None
+    def set_strategy(self, strategy: ISelectionStrategy):
+        with self._lock:
+            self._strategy = strategy
 
-    # ----------------------
-    # Routing
-    # ----------------------
+    # Routing methods
+
+    def _enabled_nodes(self) -> List[NodeInfo]:
+        return [n for n in self._nodes.values() if n.enabled]
+
     def route_select(self, query: str):
-        """Return a single engine for SELECT queries using round-robin"""
-        if not self._rr_iter:
-            raise Exception("No enabled nodes available")
-        node_name = next(self._rr_iter)
-        print(f"[LoadBalancer] Routing SELECT query to node '{node_name}'")
-        return self.nodes[node_name]["engine"]
+        """
+        SELECT - single database node
+        """
+        with self._lock:
+            nodes = self._enabled_nodes()
+            node = self._strategy.pick_node(nodes)
+            return node.engine
 
     def route_dml(self, query: str):
-        """Return all enabled engines for INSERT/UPDATE/DELETE"""
-        print(f"[LoadBalancer] Routing DML query to all enabled nodes")
-        return [info["engine"] for info in self.nodes.values() if info["enabled"]]
+        """
+        INSERT / UPDATE / DELETE - broadcast
+        """
+        with self._lock:
+            return [n.engine for n in self._enabled_nodes()]
+
