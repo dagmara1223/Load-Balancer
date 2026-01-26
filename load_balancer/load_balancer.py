@@ -58,6 +58,8 @@ class LoadBalancer:
         """
         with self._lock:
             nodes = self._enabled_nodes()
+            if not nodes:
+                raise Exception("No enabled nodes available for SELECT routing.")
             node = self._strategy.pick_node(nodes)
             return node.engine
 
