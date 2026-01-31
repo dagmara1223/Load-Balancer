@@ -10,61 +10,76 @@ class SQLAlchemyLoadBalancerListener:
     Listener przechwytujący wszystkie zapytania SQLAlchemy i przekierowujący je
     do odpowiednich węzłów LoadBalancera.
     """
+    def __init__(self):
+        self.lb = LoadBalancer()
+        self.parser = SQLTypeParser()
 
-def __init__(self):
-    self.lb = LoadBalancer()
-    self.parser = SQLTypeParser()
+        # flaga używana do unikania rekurencji eventów SQLAlchemy
+        self._local = threading.local()
+        self._local.in_callback = False
 
-    # flaga używana do unikania rekurencji eventów SQLAlchemy
-    self._local = threading.local()
-    self._local.in_callback = False
+    def register(self, engine: Engine):
+        # retval=True allows the listener to return modified statement/params
+        event.listen(engine, "before_execute", self.before_execute, retval=True)
+        event.listen(engine, "before_cursor_execute", self.before_cursor_execute)
+        print("[SQLAlchemyListener] Registered SQL load balancer interceptors.")
 
+    def _execute_on_engine(self, engine: Engine, clauseelement, multiparams, params):
+        # use a transaction context to execute on target engines
+        with engine.begin() as conn:
+            if multiparams:
+                return conn.execute(clauseelement, *multiparams)
+            else:
+                return conn.execute(clauseelement, params)
 
-def register(self, engine: Engine):
-    event.listen(engine, "before_execute", self.before_execute)
-    event.listen(engine, "before_cursor_execute", self.before_cursor_execute)
-    print("[SQLAlchemyListener] Registered SQL load balancer interceptors.")
+    def before_execute(self, conn, clauseelement, multiparams, params, ):
+        """
+        Podstawowy hook — decyduje do jakiego węzła kierować zapytanie.
+        Zwraca (clauseelement, multiparams, params) do kontynuacji wykonania na
+        oryginalnym engine; dodatkowo wykonuje kopie zapytań na węzłach docelowych.
+        """
 
+        if getattr(self._local, "in_callback", False):
+            return clauseelement, multiparams, params
 
-def before_execute(self, conn, clauseelement, multiparams, params, ):
-    """
-    Podstawowy hook — decyduje do jakiego węzła kierować zapytanie.
-    """
+        sql = str(clauseelement)
+        qtype = self.parser.get_type(sql)
 
-    if getattr(self._local, "in_callback", False):
+        # SELECT — jeden wybrany węzeł (wykonujemy WYŁĄCZNIE na wybranym backendzie)
+        if qtype == "SELECT":
+            target_engine = self.lb.route_select(sql)
+            print(f"[SQLAlchemyListener] Forwarding SELECT to {target_engine} (proxy-only)")
+
+            self._local.in_callback = True
+            try:
+                # wykonaj zapytanie na wybranym engine i zwróć jego rezultat,
+                # co zapobiegnie wykonaniu zapytania na frontendowym engine
+                result = self._execute_on_engine(target_engine, clauseelement, multiparams, params)
+                return result
+            finally:
+                self._local.in_callback = False
+
+        # DML — wykonaj na każdym engine (broadcast), a następnie pozwól głównemu wykonać
+        if qtype == "DML":
+            engines = self.lb.route_dml(sql)
+            print("[SQLAlchemyListener] Broadcasting DML to all nodes (proxy-only)")
+
+            first_result = None
+            self._local.in_callback = True
+            try:
+                for i, engine in enumerate(engines):
+                    r = self._execute_on_engine(engine, clauseelement, multiparams, params)
+                    if i == 0:
+                        first_result = r
+            finally:
+                self._local.in_callback = False
+
+            # zwróć rezultat pierwszego wykonania jako reprezentatywny wynik
+            return first_result
+
+        # Inne — nie modyfikujemy
         return clauseelement, multiparams, params
 
-    sql = str(clauseelement)
-    qtype = self.parser.get_type(sql)
-
-    # SELECT — jeden wybrany węzeł
-    if qtype == "SELECT":
-        engine = self.lb.route_select(sql)
-        print(f"[SQLAlchemyListener] Forwarding SELECT to {engine}")
-
-        self._local.in_callback = True
-        try:
-            return engine.execute(clauseelement, multiparams, params)
-        finally:
-            self._local.in_callback = False
-
-    # DML — wykonaj na każdym engine
-    if qtype == "DML":
-        engines = self.lb.route_dml(sql)
-        print("[SQLAlchemyListener] Broadcasting DML to all nodes")
-
-        self._local.in_callback = True
-        try:
-            for engine in engines:
-                engine.execute(clauseelement, multiparams, params)
-            return None  # nie wykonujemy na głównym engine
-        finally:
-            self._local.in_callback = False
-
-    # Inne — tutaj pewnie będzie zmiana tego, ale narazie tak zostawie
-    return clauseelement, multiparams, params
-
-
-def before_cursor_execute(self, conn, cursor, statement, parameters, context, executemany, ):
-    print(f"[SQLAlchemyListener] Executing SQL: {statement}")
-    return statement, parameters
+    def before_cursor_execute(self, conn, cursor, statement, parameters, context, executemany, ):
+        print(f"[SQLAlchemyListener] Executing SQL: {statement}")
+        return statement, parameters
