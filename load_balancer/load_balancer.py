@@ -3,6 +3,8 @@ from typing import Dict, List
 from load_balancer.strategies import ISelectionStrategy, WeightedRoundRobinStrategy, RoundRobinStrategy, LeastTimeStrategy
 from load_balancer.node_info import NodeInfo
 
+class NoAvailableNodesError(Exception):
+    pass
 
 class LoadBalancer:
     _instance = None
@@ -59,7 +61,8 @@ class LoadBalancer:
         with self._lock:
             nodes = self._enabled_nodes()
             if not nodes:
-                raise Exception("No enabled nodes available for SELECT routing.")
+                raise NoAvailableNodesError("No enabled database nodes available for SELECT")
+
             node = self._strategy.pick_node(nodes)
             return node.engine
 
@@ -68,5 +71,9 @@ class LoadBalancer:
         INSERT / UPDATE / DELETE - broadcast
         """
         with self._lock:
-            return [n.engine for n in self._enabled_nodes()]
+            nodes = self._enabled_nodes()
+            if not nodes:
+                raise NoAvailableNodesError("No enabled database nodes available for DML")
+
+            return [n.engine for n in nodes]
 

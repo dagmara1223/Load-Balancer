@@ -1,8 +1,0 @@
-
-services:
-  sqlite:
-    image: nouchka/sqlite3
-    container_name: sqlite-cluster
-    volumes:
-      - ./sqlite/data:/data
-    command: tail -f /dev/null

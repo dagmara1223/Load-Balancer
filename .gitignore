@@ -17,3 +17,7 @@ venv/
 
 .DS_Store
 Thumbs.db
+
+tests/
+data/
+command_logs/
