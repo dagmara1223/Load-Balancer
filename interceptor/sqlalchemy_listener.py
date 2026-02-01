@@ -5,6 +5,8 @@ from sqlalchemy.engine import Engine
 from load_balancer.load_balancer import LoadBalancer
 from interceptor.query_parser import SQLTypeParser
 
+import time
+
 class SQLAlchemyLoadBalancerListener:
     """
     Listener przechwytujący wszystkie zapytania SQLAlchemy i przekierowujący je
@@ -25,12 +27,21 @@ class SQLAlchemyLoadBalancerListener:
         print("[SQLAlchemyListener] Registered SQL load balancer interceptors.")
 
     def _execute_on_engine(self, engine: Engine, clauseelement, multiparams, params):
-        # use a transaction context to execute on target engines
-        with engine.begin() as conn:
-            if multiparams:
-                return conn.execute(clauseelement, *multiparams)
-            else:
-                return conn.execute(clauseelement, params)
+        start = time.perf_counter()
+        try:
+            with engine.begin() as conn:
+                if multiparams:
+                    result = conn.execute(clauseelement, *multiparams)
+                else:
+                    result = conn.execute(clauseelement, params)
+            return result
+        finally:
+            node = next((n for n in self.lb._nodes.values() if n.engine == engine), None)
+            if node:
+                elapsed = time.perf_counter() - start
+                node.record_execution(elapsed)
+                print(f"[NodeInfo] {node.name} executed query in {elapsed:.4f}s")
+
 
     def before_execute(self, conn, clauseelement, multiparams, params, ):
         """
