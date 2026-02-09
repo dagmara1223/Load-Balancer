@@ -3,6 +3,12 @@ source .venv/bin/activate
 python -m uvicorn demo_app.main:app --reload
 
 
+front:
+python3 -m http.server 5500 --directory demo_app/frontend
+po tym wejść w: http://127.0.0.1:5500/
+
+lub z poziomu terminala (Linux):
+
 select: 
 curl -s http://127.0.0.1:8000/users | jq
 

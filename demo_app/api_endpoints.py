@@ -39,7 +39,10 @@ def list_users(request: Request):
 
     with engine.connect() as conn:
         result = conn.execute(text("SELECT id, name FROM users ORDER BY id"))
-        rows = [dict(row) for row in result.fetchall()]
+        try:
+            rows = [dict(r) for r in result.mappings().all()]
+        except Exception:
+            rows = [dict(row) for row in result.fetchall()]
 
     return {"rows": rows}
 

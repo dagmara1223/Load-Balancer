@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Load Balancer Demo</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial;background:#f7f7f8;padding:24px}
+    .controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:880px}
+    button,input,select{padding:8px 10px;font-size:14px}
+    pre{background:#111;color:#dff;padding:12px;overflow:auto}
+    label{font-weight:600}
+  </style>
+</head>
+<body>
+  <h1>Load Balancer Demo</h1>
+  <p>Wysyłanie zapytaniań do API uruchomionego na <strong>http://127.0.0.1:8000</strong>.</p>
+
+  <div class="controls">
+    <div>
+      <label>SELECT /users</label>
+      <div><button id="btn-select">Pobierz użytkowników</button></div>
+    </div>
+
+    <div>
+      <label>INSERT</label>
+      <div style="display:flex;gap:8px"><input id="insert-name" placeholder="Imię" /><button id="btn-insert">Dodaj</button></div>
+    </div>
+
+    <div>
+      <label>UPDATE</label>
+      <div style="display:flex;gap:8px"><input id="update-id" placeholder="id" style="width:80px" /><input id="update-name" placeholder="Nowe imię" /><button id="btn-update">Zmień</button></div>
+    </div>
+
+    <div>
+      <label>DELETE</label>
+      <div style="display:flex;gap:8px"><input id="delete-id" placeholder="id" style="width:80px" /><button id="btn-delete">Usuń</button></div>
+    </div>
+
+    <div>
+      <label>Node control</label>
+      <div style="display:flex;gap:8px">
+        <select id="node-select">
+          <option value="db1">db1</option>
+          <option value="db2">db2</option>
+          <option value="db3">db3</option>
+          <option value="db4">db4</option>
+          <option value="db5">db5</option>
+          <option value="db6">db6</option>
+          <option value="db7">db7</option>
+          <option value="db8">db8</option>
+          <option value="db9">db9</option>
+          <option value="db10">db10</option>
+        </select>
+        <button id="btn-disable">Disable</button>
+        <button id="btn-enable">Enable</button>
+      </div>
+    </div>
+
+    <div style="grid-column:1/-1">
+      <label>Response / Logs</label>
+      <pre id="out">—</pre>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://127.0.0.1:8000'
+    const out = document.getElementById('out')
+
+    function show(v){ out.textContent = typeof v === 'string' ? v : JSON.stringify(v, null, 2) }
+
+    async function api(path, opts){
+      try{
+        const res = await fetch(API_BASE + path, opts)
+        const txt = await res.text()
+        try{ return JSON.parse(txt) }catch(e){ return txt }
+      }catch(e){ return {error: String(e)} }
+    }
+
+    document.getElementById('btn-select').onclick = async ()=>{
+      show('loading...')
+      const r = await api('/users')
+      show(r)
+    }
+
+    document.getElementById('btn-insert').onclick = async ()=>{
+      const name = document.getElementById('insert-name').value||'Anon'
+      show('posting...')
+      const r = await api('/users', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name})})
+      show(r)
+    }
+
+    document.getElementById('btn-update').onclick = async ()=>{
+      const id = document.getElementById('update-id').value
+      const name = document.getElementById('update-name').value
+      if(!id){ show('provide id'); return }
+      show('updating...')
+      const r = await api(`/users/${id}`, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name})})
+      show(r)
+    }
+
+    document.getElementById('btn-delete').onclick = async ()=>{
+      const id = document.getElementById('delete-id').value
+      if(!id){ show('provide id'); return }
+      show('deleting...')
+      const r = await api(`/users/${id}`, {method:'DELETE'})
+      show(r)
+    }
+
+    document.getElementById('btn-disable').onclick = async ()=>{
+      const n = document.getElementById('node-select').value
+      show('disabling...')
+      const r = await api(`/nodes/${n}/disable`, {method:'POST'})
+      show(r)
+    }
+
+    document.getElementById('btn-enable').onclick = async ()=>{
+      const n = document.getElementById('node-select').value
+      show('enabling...')
+      const r = await api(`/nodes/${n}/enable`, {method:'POST'})
+      show(r)
+    }
+  </script>
+</body>
+</html>

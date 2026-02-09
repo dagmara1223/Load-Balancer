@@ -9,6 +9,7 @@ Provides the objects via the FastAPI app.state so endpoints can use them.
 import os
 import asyncio
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from config.config_loader import ConfigLoader
@@ -80,6 +81,15 @@ def init_system_components():
 
 def create_demo_app() -> FastAPI:
     app = FastAPI(title="Load Balancer Demo App")
+    # Enable CORS for the minimal frontend served on port 5500
+    origins = ["http://127.0.0.1:5500", "http://localhost:5500"]
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
     components = init_system_components()
 
     # create frontend proxy engine (acts as interceptor/frontend)

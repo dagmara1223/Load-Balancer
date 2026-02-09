@@ -40,8 +40,12 @@ class ProxyTxConnection:
             res = conn.execute(clauseelement, *multiparams, **params)
             # try to fetch rows if any
             try:
-                fetched = res.fetchall()
-                rows = [dict(r) for r in fetched]
+                # prefer mappings() to get consistent dict-like rows
+                try:
+                    rows = [dict(r) for r in res.mappings().all()]
+                except Exception:
+                    fetched = res.fetchall()
+                    rows = [dict(r) for r in fetched]
             except Exception:
                 rows = []
             if i == 0:
@@ -126,9 +130,12 @@ class ProxyConnection:
             with target_engine.connect() as conn:
                 res = conn.execute(clauseelement, *multiparams, **params)
                 try:
-                    rows = [dict(r) for r in res.fetchall()]
+                    rows = [dict(r) for r in res.mappings().all()]
                 except Exception:
-                    rows = []
+                    try:
+                        rows = [dict(r) for r in res.fetchall()]
+                    except Exception:
+                        rows = []
             return SimpleResult(rows)
 
         if qtype == "DML":
@@ -138,9 +145,12 @@ class ProxyConnection:
                 with engine.begin() as conn:
                     res = conn.execute(clauseelement, *multiparams, **params)
                     try:
-                        rows = [dict(r) for r in res.fetchall()]
+                        rows = [dict(r) for r in res.mappings().all()]
                     except Exception:
-                        rows = []
+                        try:
+                            rows = [dict(r) for r in res.fetchall()]
+                        except Exception:
+                            rows = []
                     if i == 0:
                         first_rows = rows
             return SimpleResult(first_rows or [])
@@ -151,9 +161,12 @@ class ProxyConnection:
             with enabled[0].connect() as conn:
                 res = conn.execute(clauseelement, *multiparams, **params)
                 try:
-                    rows = [dict(r) for r in res.fetchall()]
+                    rows = [dict(r) for r in res.mappings().all()]
                 except Exception:
-                    rows = []
+                    try:
+                        rows = [dict(r) for r in res.fetchall()]
+                    except Exception:
+                        rows = []
             return SimpleResult(rows)
 
         return SimpleResult([])
