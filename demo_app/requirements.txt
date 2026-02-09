@@ -1,3 +1,5 @@
 SQLAlchemy==2.0.45
 fastapi
 pyyaml
+unicorn
+sqlite3

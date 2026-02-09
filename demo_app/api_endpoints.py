@@ -14,6 +14,7 @@ from pydantic import BaseModel
 from sqlalchemy import text
 from replication.commands import Insert
 from typing import Dict, Any
+from replication.commands import Update, Delete
 
 router = APIRouter()
 
@@ -81,6 +82,66 @@ def create_user(payload: CreateUserRequest, request: Request):
         conn.execute(text("INSERT INTO users (name) VALUES (:name)"), {"name": payload.name})
 
     return {"status": "created", "name": payload.name}
+
+
+@router.put("/users/{user_id}")
+def update_user(user_id: int, payload: CreateUserRequest, request: Request):
+    """
+    Update user's name by id. Creates an `Update` command, persists it for disabled nodes,
+    then executes the UPDATE via the frontend engine (will be broadcast to enabled nodes).
+    """
+    state = _get_app_state(request)
+    frontend_engine = state.frontend_engine
+    lb = state.load_balancer
+    command_logs: Dict[str, Any] = state.command_logs
+
+    update_cmd = Update("users", {"name": payload.name}, {"id": user_id})
+
+    # persist for disabled nodes
+    try:
+        for name, node in lb._nodes.items():
+            if not node.enabled:
+                log = command_logs.get(name)
+                if log:
+                    print(f"[API] Persisting update to log for node {name}")
+                    log.add(update_cmd)
+    except Exception:
+        pass
+
+    # execute update on frontend (listener will broadcast)
+    with frontend_engine.begin() as conn:
+        conn.execute(text("UPDATE users SET name = :name WHERE id = :id"), {"name": payload.name, "id": user_id})
+
+    return {"status": "updated", "id": user_id, "name": payload.name}
+
+
+@router.delete("/users/{user_id}")
+def delete_user(user_id: int, request: Request):
+    """
+    Delete user by id. Creates a `Delete` command, persists it for disabled nodes,
+    then executes the DELETE on the frontend engine.
+    """
+    state = _get_app_state(request)
+    frontend_engine = state.frontend_engine
+    lb = state.load_balancer
+    command_logs: Dict[str, Any] = state.command_logs
+
+    delete_cmd = Delete("users", {"id": user_id})
+
+    try:
+        for name, node in lb._nodes.items():
+            if not node.enabled:
+                log = command_logs.get(name)
+                if log:
+                    print(f"[API] Persisting delete to log for node {name}")
+                    log.add(delete_cmd)
+    except Exception:
+        pass
+
+    with frontend_engine.begin() as conn:
+        conn.execute(text("DELETE FROM users WHERE id = :id"), {"id": user_id})
+
+    return {"status": "deleted", "id": user_id}
 
 
 @router.get("/nodes")

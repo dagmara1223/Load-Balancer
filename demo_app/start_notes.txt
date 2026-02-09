@@ -1,0 +1,32 @@
+start aplikacii - w środowistu venv (można pewnie też condą):
+source .venv/bin/activate
+python -m uvicorn demo_app.main:app --reload
+
+
+select: 
+curl -s http://127.0.0.1:8000/users | jq
+
+insert: 
+curl -s -X POST http://127.0.0.1:8000/users \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Alicja"}' | jq
+  
+delete:
+curl -s -X DELETE http://127.0.0.1:8000/users/1 | jq
+
+update:
+curl -s -X PUT http://127.0.0.1:8000/users/1 \
+  -H "Content-Type: application/json" \
+  -d '{"name":"NewName"}' | jq
+  
+disable : 
+curl -s -X POST http://127.0.0.1:8000/nodes/db2/disable | jq
+
+enable :
+curl -s -X POST http://127.0.0.1:8000/nodes/db2/enable | jq
+
+
+tesowanie baz:
+sqlite3 db1.sqlite
+
+select * from users;
