@@ -14,6 +14,11 @@
 </head>
 <body>
   <h1>Load Balancer Demo</h1>
+
+    <div>
+      <label>Nodes</label>
+      <div><button id="btn-nodes">Pokaż węzły</button></div>
+    </div>
   <p>Wysyłanie zapytaniań do API uruchomionego na <strong>http://127.0.0.1:8000</strong>.</p>
 
   <div class="controls">
@@ -118,6 +123,12 @@
       const n = document.getElementById('node-select').value
       show('enabling...')
       const r = await api(`/nodes/${n}/enable`, {method:'POST'})
+      show(r)
+    }
+
+    document.getElementById('btn-nodes').onclick = async ()=>{
+      show('loading nodes...')
+      const r = await api('/nodes')
       show(r)
     }
   </script>

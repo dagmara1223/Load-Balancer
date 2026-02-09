@@ -198,7 +198,7 @@ class FrontendProxyEngine:
         self.command_logs = command_logs
 
     def connect(self):
-        return ProxyConnection(self.lb, self.parser)
+        return ProxyConnection(self.lb, self.parser, self.command_logs)
 
     def begin(self):
         # get engines for broadcast (all enabled nodes)
