@@ -167,19 +167,27 @@ def nodes_info(request: Request):
 
 @router.post("/nodes/{name}/disable")
 def disable_node(name: str, request: Request):
-    state = _get_app_state(request)
-    lb = state.load_balancer
-    if name not in lb._nodes:
+    state = request.app.state
+    hc = state.health_checker
+
+    if name not in state.load_balancer._nodes:
         raise HTTPException(status_code=404, detail="Node not found")
-    lb.disable_node(name)
+
+    event = {"db": name, "status": "DOWN"}
+    hc.notify(event)
+
     return {"node": name, "enabled": False}
 
 
 @router.post("/nodes/{name}/enable")
 def enable_node(name: str, request: Request):
-    state = _get_app_state(request)
-    lb = state.load_balancer
-    if name not in lb._nodes:
+    state = request.app.state
+    hc = state.health_checker
+
+    if name not in state.load_balancer._nodes:
         raise HTTPException(status_code=404, detail="Node not found")
-    lb.enable_node(name)
+
+    event = {"db": name, "status": "UP"}
+    hc.notify(event)
+
     return {"node": name, "enabled": True}

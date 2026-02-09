@@ -117,9 +117,10 @@ class ProxyConnection:
       - DML -> route_dml -> execute on each enabled backend (in separate transactions via begin() if needed)
       - other -> attempt to run on first enabled node
     """
-    def __init__(self, lb: LoadBalancer, parser: SQLTypeParser):
+    def __init__(self, lb: LoadBalancer, parser: SQLTypeParser, command_logs: dict):
         self._lb = lb
         self._parser = parser
+        self._command_logs = command_logs
 
     def execute(self, clauseelement: ClauseElement, *multiparams, **params):
         sql = str(clauseelement)
@@ -139,20 +140,26 @@ class ProxyConnection:
             return SimpleResult(rows)
 
         if qtype == "DML":
-            engines = self._lb.route_dml(sql)
+            enabled_engines = self._lb.route_dml(sql)
+            disabled_nodes = self._lb.get_disabled_nodes()
+            command = self._parser.to_command(sql, params)
+
             first_rows = None
-            for i, engine in enumerate(engines):
+
+            # wykonanie na zdrowych 
+            for i, engine in enumerate(enabled_engines):
                 with engine.begin() as conn:
                     res = conn.execute(clauseelement, *multiparams, **params)
-                    try:
-                        rows = [dict(r) for r in res.mappings().all()]
-                    except Exception:
-                        try:
-                            rows = [dict(r) for r in res.fetchall()]
-                        except Exception:
-                            rows = []
                     if i == 0:
-                        first_rows = rows
+                        try:
+                            first_rows = [dict(r) for r in res.mappings().all()]
+                        except Exception:
+                            first_rows = []
+
+            for node in disabled_nodes:
+                print(f"[CommandLog] {node.name} DOWN → storing command")
+                self._command_logs[node.name].add(command)
+
             return SimpleResult(first_rows or [])
 
         # fallback: run on first enabled engine
@@ -185,9 +192,10 @@ class FrontendProxyEngine:
     It exposes minimal engine API: connect() and begin().
     Internally routes queries using the provided LoadBalancer.
     """
-    def __init__(self, load_balancer: LoadBalancer):
+    def __init__(self, load_balancer: LoadBalancer, command_logs: dict):
         self.lb = load_balancer
         self.parser = SQLTypeParser()
+        self.command_logs = command_logs
 
     def connect(self):
         return ProxyConnection(self.lb, self.parser)

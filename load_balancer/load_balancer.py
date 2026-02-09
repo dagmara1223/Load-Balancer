@@ -51,6 +51,10 @@ class LoadBalancer:
 
     # Routing methods
 
+    def get_disabled_nodes(self):
+        with self._lock:
+            return [n for n in self._nodes.values() if not n.enabled]
+
     def _enabled_nodes(self) -> List[NodeInfo]:
         return [n for n in self._nodes.values() if n.enabled]
 

@@ -93,15 +93,19 @@ def create_demo_app() -> FastAPI:
     components = init_system_components()
 
     # create frontend proxy engine (acts as interceptor/frontend)
-    lb = components["load_balancer"]
-    frontend_engine = FrontendProxyEngine(lb)
+    # lb = components["load_balancer"]
+    # frontend_engine = FrontendProxyEngine(lb, app.state.command_logs)
+    frontend_engine = FrontendProxyEngine(
+    components["load_balancer"],
+    components["command_logs"]
+)
 
     # store components on app.state so routers/endpoints can access them
     app.state.cfg = components["config_loader"]
     app.state.engine_factory = components["engine_factory"]
     app.state.backend_engines = components["engines"]
-    app.state.load_balancer = components["load_balancer"]
     app.state.command_logs = components["command_logs"]
+    app.state.load_balancer = components["load_balancer"]
     app.state.health_checker = components["health_checker"]
     app.state.frontend_engine = frontend_engine
 
@@ -154,6 +158,14 @@ def create_demo_app() -> FastAPI:
 
 
 app = create_demo_app()
+
+engine = app.state.backend_engines["db3"]  
+
+with engine.connect() as conn:
+    rows = conn.execute(text("SELECT * FROM users")).fetchall()
+
+print("DB3 USERS:", rows)
+
 
 if __name__ == "__main__":
     print("Starting demo app components in standalone mode (no HTTP server).")
