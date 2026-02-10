@@ -13,7 +13,7 @@ class RoundRobinStrategy(ISelectionStrategy):
         self._index = 0
 
     def pick_node(self, enabled_nodes):
-        node = enabled_nodes[self._index]
+        node = enabled_nodes[self._index % len(enabled_nodes)]
         self._index = (self._index + 1) % len(enabled_nodes)
         return node
 
@@ -24,7 +24,7 @@ class WeightedRoundRobinStrategy(ISelectionStrategy):
         self._counter = 0
 
     def pick_node(self, enabled_nodes: List[NodeInfo]) -> NodeInfo:
-        node = enabled_nodes[self._index]
+        node = enabled_nodes[self._index % len(enabled_nodes)]
 
         self._counter += 1
         if self._counter >= node.weight:

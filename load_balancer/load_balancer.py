@@ -64,10 +64,11 @@ class LoadBalancer:
         """
         with self._lock:
             nodes = self._enabled_nodes()
-            if not nodes:
+            if len(nodes) == 0:
                 raise NoAvailableNodesError("No enabled database nodes available for SELECT")
 
             node = self._strategy.pick_node(nodes)
+            print(f"[LoadBalancer] SELECT from: {node.name}")
             return node.engine
 
     def route_dml(self, query: str):
@@ -76,7 +77,7 @@ class LoadBalancer:
         """
         with self._lock:
             nodes = self._enabled_nodes()
-            if not nodes:
+            if len(nodes) == 0:
                 raise NoAvailableNodesError("No enabled database nodes available for DML")
 
             return [n.engine for n in nodes]

@@ -10,12 +10,13 @@ import os
 import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from config.config_loader import ConfigLoader
 from connection.engine_factory import EngineFactory
 from connection.proxy_engine import FrontendProxyEngine
-from load_balancer.load_balancer import LoadBalancer
+from load_balancer.load_balancer import LoadBalancer, NoAvailableNodesError
 from replication.command_log import CommandLog
 from monitoring.health_checker import HealthChecker
 from monitoring.failover_manager import FailoverManager
@@ -154,6 +155,10 @@ def create_demo_app() -> FastAPI:
                 pass
         print("[Shutdown] Demo app stopped.")
 
+    @app.exception_handler(NoAvailableNodesError)
+    async def no_available_nodes_handler(request, exc):
+        return JSONResponse("No Available Nodes")
+    
     return app
 
 
