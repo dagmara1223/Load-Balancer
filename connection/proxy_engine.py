@@ -4,6 +4,8 @@ from sqlalchemy.engine import Engine
 from load_balancer.load_balancer import LoadBalancer
 from interceptor.query_parser import SQLTypeParser
 
+import time
+
 class SimpleResult:
     """
     Minimal result-like object that provides:
@@ -128,6 +130,7 @@ class ProxyConnection:
 
         if qtype == "SELECT":
             target_engine = self._lb.route_select(sql)
+            start = time.perf_counter()
             with target_engine.connect() as conn:
                 res = conn.execute(clauseelement, *multiparams, **params)
                 try:
@@ -137,6 +140,10 @@ class ProxyConnection:
                         rows = [dict(r) for r in res.fetchall()]
                     except Exception:
                         rows = []
+            elapsed = time.perf_counter() - start
+            node = next((n for n in self._lb._nodes.values() if n.engine == target_engine), None)
+            if node:
+                node.record_execution(elapsed)
             return SimpleResult(rows)
 
         if qtype == "DML":

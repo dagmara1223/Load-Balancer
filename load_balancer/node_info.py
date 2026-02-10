@@ -20,4 +20,4 @@ class NodeInfo:
         return self.total_time / self.query_count
 
     def __repr__(self):
-        return f"<NodeInfo {self.name} enabled={self.enabled} weight={self.weight} avg_response_time={self.avg_response_time}>"
+        return f"<NodeInfo {self.name} enabled={self.enabled} weight={self.weight} avg_response_time={self.avg_response_time:.2e}>"
