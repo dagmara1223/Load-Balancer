@@ -62,6 +62,18 @@
       </div>
     </div>
 
+    <div>
+      <label>Load Balancer Strategy</label>
+      <div style="display:flex;gap:8px; align-items:center;">
+        <select id="strategy-select">
+          <option value="round_robin">Round Robin</option>
+          <option value="weighted_round_robin">Weighted Round Robin</option>
+          <option value="least_time">Least Time</option>
+        </select>
+        <button id="btn-set-strategy">Set Strategy</button>
+      </div>
+    </div>
+
     <div style="grid-column:1/-1">
       <label>Response / Logs</label>
       <pre id="out">—</pre>
@@ -131,6 +143,14 @@
       const r = await api('/nodes')
       show(r)
     }
+
+    document.getElementById('btn-set-strategy').onclick = async () => {
+      const strategy = document.getElementById('strategy-select').value
+      show('setting strategy...')
+      const r = await api(`/strategy/${strategy}`, {method:'POST'})
+      show(r)
+    }
+
   </script>
 </body>
 </html>

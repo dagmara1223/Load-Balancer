@@ -15,9 +15,14 @@ from sqlalchemy import text
 from replication.commands import Insert
 from typing import Dict, Any
 from replication.commands import Update, Delete
-
+from load_balancer.strategies import RoundRobinStrategy, WeightedRoundRobinStrategy, LeastTimeStrategy
 router = APIRouter()
 
+STRATEGIES = {
+    "round_robin": RoundRobinStrategy,
+    "weighted_round_robin": WeightedRoundRobinStrategy,
+    "least_time": LeastTimeStrategy
+}
 
 class CreateUserRequest(BaseModel):
     name: str
@@ -191,3 +196,15 @@ def enable_node(name: str, request: Request):
     hc.notify(event)
 
     return {"node": name, "enabled": True}
+
+@router.post("/strategy/{strategy_name}")
+def set_strategy(strategy_name: str, request: Request):
+    state = request.app.state
+    lb = state.load_balancer
+
+    StrategyCls = STRATEGIES.get(strategy_name.lower())
+    if not StrategyCls:
+        raise HTTPException(status_code=400, detail="Unknown strategy")
+
+    lb.set_strategy(StrategyCls())
+    return {"status": "ok", "strategy": strategy_name}

@@ -22,7 +22,7 @@ class LoadBalancer:
 
         self._nodes: Dict[str, NodeInfo] = {}
         self._lock = Lock()
-        self._strategy = strategy or WeightedRoundRobinStrategy()
+        self._strategy = strategy or RoundRobinStrategy()
         self._initialized = True
 
     # Node management methods

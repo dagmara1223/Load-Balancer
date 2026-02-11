@@ -5,16 +5,16 @@ databases:
 
   - name: db2
     url: mysql+pymysql://user:password@localhost:3308/app
-    weight: 1
+    weight: 2
 
   - name: db3
     url: mysql+pymysql://user:password@localhost:3309/app
-    weight: 1
+    weight: 3
   
   - name: db4
     url: mysql+pymysql://user:password@localhost:3310/app
-    weight: 1
+    weight: 4
 
   - name: db5
     url: mysql+pymysql://user:password@localhost:3311/app
-    weight: 1
+    weight: 5

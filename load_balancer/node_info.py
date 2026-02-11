@@ -16,7 +16,7 @@ class NodeInfo:
     @property
     def avg_response_time(self) -> float:
         if self.query_count == 0:
-            return float("inf")
+            return 0
         return self.total_time / self.query_count
 
     def __repr__(self):
