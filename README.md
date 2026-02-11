@@ -46,7 +46,7 @@ docker start mysql1
 4. Sprawdzenie zawartości bazy danych z poziomu terminala (hasło: `root`):
 
 ```bash
-docker exec -it mysql1 mysql -u root -p
+docker exec -it mysql1 mysql -u root -proot
 USE app;
 SELECT * FROM users;
 ```
