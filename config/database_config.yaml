@@ -1,40 +1,20 @@
 databases:
   - name: db1
-    url: sqlite:///data/db1.sqlite
+    url: mysql+pymysql://user:password@localhost:3307/app
     weight: 1
 
   - name: db2
-    url: sqlite:///data/db2.sqlite
+    url: mysql+pymysql://user:password@localhost:3308/app
     weight: 1
 
   - name: db3
-    url: sqlite:///data/db3.sqlite
+    url: mysql+pymysql://user:password@localhost:3309/app
     weight: 1
-
+  
   - name: db4
-    url: sqlite:///data/db4.sqlite
+    url: mysql+pymysql://user:password@localhost:3310/app
     weight: 1
 
   - name: db5
-    url: sqlite:///data/db5.sqlite
-    weight: 1
-
-  - name: db6
-    url: sqlite:///data/db6.sqlite
-    weight: 1
-
-  - name: db7
-    url: sqlite:///data/db7.sqlite
-    weight: 1
-
-  - name: db8
-    url: sqlite:///data/db8.sqlite
-    weight: 1
-
-  - name: db9
-    url: sqlite:///data/db9.sqlite
-    weight: 1
-
-  - name: db10
-    url: sqlite:///data/db10.sqlite
+    url: mysql+pymysql://user:password@localhost:3311/app
     weight: 1

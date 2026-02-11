@@ -118,8 +118,8 @@ def create_demo_app() -> FastAPI:
                     text(
                         """
                         CREATE TABLE IF NOT EXISTS users (
-                            id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            name TEXT
+                            id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                            name VARCHAR(255)
                         )
                         """
                     )
