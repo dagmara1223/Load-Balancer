@@ -3,3 +3,5 @@ fastapi
 pyyaml
 sqlite3
 uvicorn
+cryptography
+pymysql
