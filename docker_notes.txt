@@ -5,5 +5,11 @@ Sprawdzenie:
 docker ps
 
 włączenie / wyłączenie (NAMES: mysql1, mysql2, mysql3, mysql4, mysql5):
-docker stop mysql2
-docker start mysql2
+docker stop mysql1
+docker start mysql1
+
+
+Sprawdzenie bazy z lini komend (hasło to: root)
+docker exec -it mysql1 mysql -u root -p
+USE app;
+SELECT * FROM users;

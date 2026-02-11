@@ -2,7 +2,6 @@ from sqlalchemy import create_engine
 from config.config_loader import ConfigLoader
 from connection.engine_factory import EngineFactory
 from load_balancer.load_balancer import LoadBalancer
-from interceptor.sqlalchemy_listener import SQLAlchemyLoadBalancerListener
 
 
 def init_app():
@@ -23,10 +22,6 @@ def init_app():
     # the listener will intercept calls on this engine and forward/broadcast
     frontend_engine = create_engine("sqlite:///:memory:", echo=False, future=True)
 
-    # register listener on the frontend engine
-    listener = SQLAlchemyLoadBalancerListener()
-    listener.register(frontend_engine)
-    print("Registered SQLAlchemyLoadBalancerListener on frontend engine")
 
     return {
         "config_loader": cfg,
@@ -34,7 +29,6 @@ def init_app():
         "engines": engines,
         "load_balancer": lb,
         "frontend_engine": frontend_engine,
-        "listener": listener,
     }
 
 
