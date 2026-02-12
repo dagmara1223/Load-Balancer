@@ -14,8 +14,9 @@ class SimpleResult:
     - iterable
     This is compatible with how demo endpoints read results.
     """
-    def __init__(self, rows: List[Dict[str, Any]]):
+    def __init__(self, rows: List[Dict[str, Any]], meta: Dict[str, Any] | None = None):
         self._rows = rows or []
+        self.meta = meta or {}
 
     def fetchall(self):
         return self._rows
@@ -25,6 +26,9 @@ class SimpleResult:
 
     def __iter__(self):
         return iter(self._rows)
+
+    def to_list(self):
+        return self._rows
 
 
 class ProxyTxConnection:
@@ -144,7 +148,12 @@ class ProxyConnection:
             node = next((n for n in self._lb._nodes.values() if n.engine == target_engine), None)
             if node:
                 node.record_execution(elapsed)
-            return SimpleResult(rows)
+            # attach minimal metadata: only the node name that served the SELECT
+            try:
+                meta = node.name if node is not None else None
+            except Exception:
+                meta = getattr(node, 'name', None)
+            return SimpleResult(rows, meta=meta)
 
         if qtype == "DML":
             enabled_engines = self._lb.route_dml(sql)

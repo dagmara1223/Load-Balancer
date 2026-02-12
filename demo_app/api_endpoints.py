@@ -44,12 +44,21 @@ def list_users(request: Request):
 
     with engine.connect() as conn:
         result = conn.execute(text("SELECT id, name FROM users ORDER BY id"))
+        # Proxy's SimpleResult provides fetchall() and .meta (if available)
         try:
-            rows = [dict(r) for r in result.mappings().all()]
+            rows = result.fetchall()
         except Exception:
-            rows = [dict(row) for row in result.fetchall()]
+            try:
+                rows = [dict(r) for r in result.mappings().all()]
+            except Exception:
+                try:
+                    rows = [dict(row) for row in result.fetchall()]
+                except Exception:
+                    rows = []
 
-    return {"rows": rows}
+        served_by = getattr(result, 'meta', {}) or {}
+
+    return {"rows": rows, "served_by": served_by}
 
 
 @router.post("/users")

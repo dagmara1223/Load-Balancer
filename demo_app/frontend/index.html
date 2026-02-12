@@ -7,6 +7,7 @@
   <style>
     body{font-family:system-ui,Segoe UI,Roboto,Arial;background:#f7f7f8;padding:24px}
     .controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:880px}
+    .settings{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:880px}
     button,input,select{padding:8px 10px;font-size:14px}
     pre{background:#111;color:#dff;padding:12px;overflow:auto}
     label{font-weight:600}
@@ -15,11 +16,27 @@
 <body>
   <h1>Load Balancer Demo</h1>
 
+  <p>Wysyłanie zapytaniań do API uruchomionego na <strong>http://127.0.0.1:8000</strong>.</p>
+  <div class="settings">
     <div>
       <label>Nodes</label>
       <div><button id="btn-nodes">Pokaż węzły</button></div>
     </div>
-  <p>Wysyłanie zapytaniań do API uruchomionego na <strong>http://127.0.0.1:8000</strong>.</p>
+
+      <div>
+      <label>Load Balancer Strategy</label>
+      <div style="display:flex;gap:8px; align-items:center;">
+        <select id="strategy-select">
+          <option value="round_robin">Round Robin</option>
+          <option value="weighted_round_robin">Weighted Round Robin</option>
+          <option value="least_time">Least Time</option>
+        </select>
+        <button id="btn-set-strategy">Set Strategy</button>
+      </div>
+    </div>
+    </div>
+
+    <p>SQL</p>
 
   <div class="controls">
     <div>
@@ -40,38 +57,6 @@
     <div>
       <label>DELETE</label>
       <div style="display:flex;gap:8px"><input id="delete-id" placeholder="id" style="width:80px" /><button id="btn-delete">Usuń</button></div>
-    </div>
-
-    <div>
-      <label>Node control</label>
-      <div style="display:flex;gap:8px">
-        <select id="node-select">
-          <option value="db1">db1</option>
-          <option value="db2">db2</option>
-          <option value="db3">db3</option>
-          <option value="db4">db4</option>
-          <option value="db5">db5</option>
-          <option value="db6">db6</option>
-          <option value="db7">db7</option>
-          <option value="db8">db8</option>
-          <option value="db9">db9</option>
-          <option value="db10">db10</option>
-        </select>
-        <button id="btn-disable">Disable</button>
-        <button id="btn-enable">Enable</button>
-      </div>
-    </div>
-
-    <div>
-      <label>Load Balancer Strategy</label>
-      <div style="display:flex;gap:8px; align-items:center;">
-        <select id="strategy-select">
-          <option value="round_robin">Round Robin</option>
-          <option value="weighted_round_robin">Weighted Round Robin</option>
-          <option value="least_time">Least Time</option>
-        </select>
-        <button id="btn-set-strategy">Set Strategy</button>
-      </div>
     </div>
 
     <div style="grid-column:1/-1">
@@ -121,20 +106,6 @@
       if(!id){ show('provide id'); return }
       show('deleting...')
       const r = await api(`/users/${id}`, {method:'DELETE'})
-      show(r)
-    }
-
-    document.getElementById('btn-disable').onclick = async ()=>{
-      const n = document.getElementById('node-select').value
-      show('disabling...')
-      const r = await api(`/nodes/${n}/disable`, {method:'POST'})
-      show(r)
-    }
-
-    document.getElementById('btn-enable').onclick = async ()=>{
-      const n = document.getElementById('node-select').value
-      show('enabling...')
-      const r = await api(`/nodes/${n}/enable`, {method:'POST'})
       show(r)
     }
 
