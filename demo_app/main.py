@@ -164,12 +164,6 @@ def create_demo_app() -> FastAPI:
 
 app = create_demo_app()
 
-engine = app.state.backend_engines["db3"]  
-
-with engine.connect() as conn:
-    rows = conn.execute(text("SELECT * FROM users")).fetchall()
-
-print("DB3 USERS:", rows)
 
 
 if __name__ == "__main__":

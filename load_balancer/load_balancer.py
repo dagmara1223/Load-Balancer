@@ -27,9 +27,9 @@ class LoadBalancer:
 
     # Node management methods
     
-    def add_node(self, name: str, engine, weight: int = 1):
+    def add_node(self, name: str, engine, weight: int = 1, enabled: bool = True):
         with self._lock:
-            self._nodes[name] = NodeInfo(name, engine, weight)
+            self._nodes[name] = NodeInfo(name, engine, weight, enabled)
 
     def remove_node(self, name: str):
         with self._lock:

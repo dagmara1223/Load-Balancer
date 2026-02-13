@@ -26,5 +26,4 @@ class FailoverManager(Observer):
             print(f"[FailoverManager] disabling database: {db}")
             self.load_balancer.disable_node(db)
         elif status == "UP":
-            print(f"[FailoverManager] enabling database {db}")
-            self.load_balancer.enable_node(db)
+            print(f"[FailoverManager] noticed {db} is UP (Recovery will handle enabling)")

@@ -24,13 +24,13 @@ class HealthChecker(Subject):
         self.engines = engines
         self.last_status = {name:"UNKNOWN" for name in engines}
     
-    def ping(self, engine):
+    def ping(self, name, engine):
         try:
             with engine.connect() as conn:
                 conn.execute(text("SELECT 1"))
             return True
         except SQLAlchemyError as e:
-            print("PING ERROR:", e)   
+            print("[HealthChecker] ping error, database", name, "is DOWN.")
             return False
     
     def run_check(self):
@@ -38,7 +38,7 @@ class HealthChecker(Subject):
         designed to be called every X seconds
         """
         for name, engine in self.engines.items():
-            is_up = self.ping(engine)
+            is_up = self.ping(name, engine)
             if is_up:
                 new_status = "UP"
             else:

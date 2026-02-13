@@ -31,4 +31,6 @@ class EngineFactory:
             weight = db_cfg.get("weight", 1)
 
             engine = self.engines[name]
-            lb.add_node(name=name, engine=engine, weight=weight)
+            # Register node as disabled initially. HealthChecker + FailoverManager
+            # will enable nodes once they respond to pings.
+            lb.add_node(name=name, engine=engine, weight=weight, enabled=False)
