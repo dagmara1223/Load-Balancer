@@ -50,3 +50,7 @@ docker exec -it mysql1 mysql -u root -proot
 USE app;
 SELECT * FROM users;
 ```
+
+```bash
+docker exec -i mysql1 mysql -u root -proot -e "USE app; SELECT * FROM users;"
+```

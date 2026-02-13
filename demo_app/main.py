@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
+from sqlalchemy.exc import OperationalError
 
 from config.config_loader import ConfigLoader
 from connection.engine_factory import EngineFactory
@@ -35,7 +36,7 @@ async def _health_check_loop(checker: HealthChecker, interval: int, app: FastAPI
     """
     try:
         while True:
-            checker.run_check()
+            await asyncio.to_thread(checker.run_check)
             await asyncio.sleep(interval)
     except asyncio.CancelledError:
         return
@@ -124,8 +125,10 @@ def create_demo_app() -> FastAPI:
                         """
                     )
                 )
+        except OperationalError:
+            print(f"[Startup] Database {name} is unavailable.")
         except Exception as e:
-            print(f"[Startup] Warning: cannot create table on {name}: {e}")
+            print(f"[Startup] Unexpected error on {name}: {type(e).__name__}")
 
     # include API router
     from demo_app.api_endpoints import router as api_router
@@ -157,7 +160,10 @@ def create_demo_app() -> FastAPI:
 
     @app.exception_handler(NoAvailableNodesError)
     async def no_available_nodes_handler(request, exc):
-        return JSONResponse("No Available Nodes")
+        return JSONResponse(
+            status_code=503,
+            content={"detail": "No available database nodes"}
+        )
     
     return app
 

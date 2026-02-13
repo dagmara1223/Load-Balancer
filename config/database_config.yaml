@@ -1,20 +1,20 @@
 databases:
   - name: db1
-    url: mysql+pymysql://user:password@localhost:3307/app
+    url: mysql+pymysql://user:password@localhost:3307/app?connect_timeout=1
     weight: 1
 
   - name: db2
-    url: mysql+pymysql://user:password@localhost:3308/app
+    url: mysql+pymysql://user:password@localhost:3308/app?connect_timeout=1
     weight: 2
 
   - name: db3
-    url: mysql+pymysql://user:password@localhost:3309/app
+    url: mysql+pymysql://user:password@localhost:3309/app?connect_timeout=1
     weight: 3
   
   - name: db4
-    url: mysql+pymysql://user:password@localhost:3310/app
+    url: mysql+pymysql://user:password@localhost:3310/app?connect_timeout=1
     weight: 4
 
   - name: db5
-    url: mysql+pymysql://user:password@localhost:3311/app
+    url: mysql+pymysql://user:password@localhost:3311/app?connect_timeout=1
     weight: 5
