@@ -171,6 +171,12 @@ def create_demo_app() -> FastAPI:
                 status_code=202,
                 content={"detail": "No database available. Operation queued and will be executed when DB is back."}
             )
+        
+        if exc.operation == "RETRY":
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "Database temporarily unavailable. Please retry your request."}
+            )
     
     return app
 

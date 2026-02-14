@@ -1,8 +1,9 @@
 from typing import Any, Dict, List
 from sqlalchemy.sql import ClauseElement
 from sqlalchemy.engine import Engine
-from load_balancer.load_balancer import LoadBalancer
+from load_balancer.load_balancer import LoadBalancer, NoAvailableNodesError
 from interceptor.query_parser import SQLTypeParser
+from sqlalchemy.exc import OperationalError
 
 import time
 
@@ -135,26 +136,29 @@ class ProxyConnection:
         if qtype == "SELECT":
             target_engine = self._lb.route_select(sql)
             start = time.perf_counter()
-            with target_engine.connect() as conn:
-                res = conn.execute(clauseelement, *multiparams, **params)
-                try:
-                    rows = [dict(r) for r in res.mappings().all()]
-                except Exception:
-                    try:
-                        rows = [dict(r) for r in res.fetchall()]
-                    except Exception:
-                        rows = []
-            elapsed = time.perf_counter() - start
-            node = next((n for n in self._lb._nodes.values() if n.engine == target_engine), None)
-            if node:
-                node.record_execution(elapsed)
-            # attach minimal metadata: only the node name that served the SELECT
             try:
-                meta = node.name if node is not None else None
-            except Exception:
-                meta = getattr(node, 'name', None)
-            return SimpleResult(rows, meta=meta)
-
+                with target_engine.connect() as conn:
+                    res = conn.execute(clauseelement, *multiparams, **params)
+                    try:
+                        rows = [dict(r) for r in res.mappings().all()]
+                    except Exception:
+                        try:
+                            rows = [dict(r) for r in res.fetchall()]
+                        except Exception:
+                            rows = []
+                elapsed = time.perf_counter() - start
+                node = next((n for n in self._lb._nodes.values() if n.engine == target_engine), None)
+                if node:
+                    node.record_execution(elapsed)
+                # attach minimal metadata: only the node name that served the SELECT
+                try:
+                    meta = node.name if node is not None else None
+                except Exception:
+                    meta = getattr(node, 'name', None)
+                return SimpleResult(rows, meta=meta)
+            except OperationalError:
+                raise NoAvailableNodesError("RETRY")
+            
         if qtype == "DML":
             enabled_engines = self._lb.route_dml(sql)
             disabled_nodes = self._lb.get_disabled_nodes()

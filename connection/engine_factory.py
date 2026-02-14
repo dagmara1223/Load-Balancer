@@ -18,7 +18,7 @@ class EngineFactory:
             name = db_cfg["name"]
             url = db_cfg["url"]
 
-            engine = create_engine(url, echo=False, future=True)
+            engine = create_engine(url, echo=False, future=True, pool_pre_ping=True)
             self.engines[name] = engine
 
         return self.engines
