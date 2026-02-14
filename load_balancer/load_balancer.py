@@ -4,7 +4,10 @@ from load_balancer.strategies import ISelectionStrategy, WeightedRoundRobinStrat
 from load_balancer.node_info import NodeInfo
 
 class NoAvailableNodesError(Exception):
-    pass
+    def __init__(self, operation: str):
+        self.operation = operation
+        super().__init__(f"No enabled nodes for {operation}")
+
 
 class LoadBalancer:
     _instance = None
@@ -65,7 +68,7 @@ class LoadBalancer:
         with self._lock:
             nodes = self._enabled_nodes()
             if len(nodes) == 0:
-                raise NoAvailableNodesError("No enabled database nodes available for SELECT")
+                raise NoAvailableNodesError("SELECT")
 
             node = self._strategy.pick_node(nodes)
             print(f"[LoadBalancer] SELECT from: {node.name}")
@@ -78,7 +81,7 @@ class LoadBalancer:
         with self._lock:
             nodes = self._enabled_nodes()
             if len(nodes) == 0:
-                raise NoAvailableNodesError("No enabled database nodes available for DML")
+                raise NoAvailableNodesError("DML")
 
             return [n.engine for n in nodes]
 

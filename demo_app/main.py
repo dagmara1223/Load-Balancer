@@ -160,10 +160,17 @@ def create_demo_app() -> FastAPI:
 
     @app.exception_handler(NoAvailableNodesError)
     async def no_available_nodes_handler(request, exc):
-        return JSONResponse(
-            status_code=503,
-            content={"detail": "No available database nodes"}
-        )
+        if exc.operation == "SELECT":
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "Database unavailable - cannot fetch data"}
+            )
+
+        if exc.operation == "DML":
+            return JSONResponse(
+                status_code=202,
+                content={"detail": "No database available. Operation queued and will be executed when DB is back."}
+            )
     
     return app
 
