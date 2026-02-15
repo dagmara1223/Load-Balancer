@@ -96,7 +96,7 @@ def create_user(payload: CreateUserRequest, request: Request):
     # Execute INSERT on frontend engine.
     # Listener will broadcast to all enabled backend engines.
     with frontend_engine.begin() as conn:
-        conn.execute(text("INSERT INTO users (name) VALUES (:name)"), {"name": payload.name})
+        conn.execute(text("INSERT INTO users (name) VALUES (:name)"), {"name": payload.name}, _command_obj=insert_cmd)
 
     return {"status": "created", "name": payload.name}
 
@@ -127,7 +127,7 @@ def update_user(user_id: int, payload: CreateUserRequest, request: Request):
 
     # execute update on frontend (listener will broadcast)
     with frontend_engine.begin() as conn:
-        conn.execute(text("UPDATE users SET name = :name WHERE id = :id"), {"name": payload.name, "id": user_id})
+        conn.execute(text("UPDATE users SET name = :name WHERE id = :id"), {"name": payload.name, "id": user_id}, _command_obj=update_cmd)
 
     return {"status": "updated", "id": user_id, "name": payload.name}
 
@@ -156,7 +156,7 @@ def delete_user(user_id: int, request: Request):
         pass
 
     with frontend_engine.begin() as conn:
-        conn.execute(text("DELETE FROM users WHERE id = :id"), {"id": user_id})
+        conn.execute(text("DELETE FROM users WHERE id = :id"), {"id": user_id}, _command_obj=delete_cmd)
 
     return {"status": "deleted", "id": user_id}
 

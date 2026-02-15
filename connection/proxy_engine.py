@@ -7,6 +7,7 @@ from sqlalchemy.exc import OperationalError
 
 import time
 
+
 class SimpleResult:
     """
     Minimal result-like object that provides:
@@ -37,14 +38,33 @@ class ProxyTxConnection:
     Proxy object returned by FrontendProxyEngine.begin().__enter__().
     It executes statements inside transactions on all provided real backend connections.
     """
-    def __init__(self, real_conns: List[Any]):
-        # real_conns is a list of sqlalchemy Connection objects (already in transaction)
+    def __init__(self, real_conns: List[Any], command_logs: dict, parser: SQLTypeParser):
+        # real_conns is a list of tuples (Connection, node_name)
         self._conns = real_conns
+        self._command_logs = command_logs
+        self._parser = parser
 
     def execute(self, clauseelement: ClauseElement, *multiparams, **params):
+        command = params.pop("_command_obj", None)
+
         first_rows = None
-        for i, conn in enumerate(self._conns):
-            res = conn.execute(clauseelement, *multiparams, **params)
+        for i, (conn, node_name) in enumerate(self._conns):
+            try:
+                res = conn.execute(clauseelement, *multiparams, **params)
+            except OperationalError as e:
+                if node_name and node_name in self._command_logs:
+                    print(f"[ProxyTxConnection] OperationalError on {node_name}, storing command")
+                    try:
+                        if command is not None:
+                            self._command_logs[node_name].add(command)
+                    except Exception:
+                        pass
+                else:
+                    print(f"[ProxyTxConnection] Error executing on connection {i}: {str(e)}")
+                res = None
+            except Exception as e:
+                print(f"[ProxyTxConnection] Error executing on connection {i}: {str(e)}")
+                res = None
             # try to fetch rows if any
             try:
                 # prefer mappings() to get consistent dict-like rows
@@ -60,7 +80,7 @@ class ProxyTxConnection:
         return SimpleResult(first_rows or [])
 
     def close(self):
-        for conn in self._conns:
+        for conn, _ in self._conns:
             try:
                 conn.close()
             except Exception:
@@ -72,23 +92,29 @@ class ProxyTransaction:
     Context manager for transactional broadcast: opens a transaction on each backend engine,
     and commits/rolls back them together.
     """
-    def __init__(self, engines: List[Engine]):
+    def __init__(self, engines: List[Engine], lb: LoadBalancer, command_logs: dict, parser: SQLTypeParser):
         self._engines = engines
-        self._pairs = []  # list of tuples (conn, trans)
+        self._lb = lb
+        self._command_logs = command_logs
+        self._parser = parser
+        self._pairs = []  # list of tuples (conn, trans, node_name)
 
     def __enter__(self):
         self._pairs = []
         for engine in self._engines:
             conn = engine.connect()
             trans = conn.begin()
-            self._pairs.append((conn, trans))
+            # try to resolve node name for this engine
+            node = next((n for n in self._lb._nodes.values() if n.engine == engine), None)
+            node_name = node.name if node is not None else None
+            self._pairs.append((conn, trans, node_name))
         # return ProxyTxConnection that will execute against all opened connections
-        return ProxyTxConnection([c for c, t in self._pairs])
+        return ProxyTxConnection([(c, name) for c, t, name in self._pairs], self._command_logs, self._parser)
 
     def __exit__(self, exc_type, exc, tb):
         if exc_type is None:
             # commit all
-            for conn, trans in self._pairs:
+            for conn, trans, _ in self._pairs:
                 try:
                     trans.commit()
                 except Exception:
@@ -103,7 +129,7 @@ class ProxyTransaction:
                         pass
         else:
             # rollback all
-            for conn, trans in self._pairs:
+            for conn, trans, _ in self._pairs:
                 try:
                     trans.rollback()
                 except Exception:
@@ -138,7 +164,33 @@ class ProxyConnection:
             start = time.perf_counter()
             try:
                 with target_engine.connect() as conn:
-                    res = conn.execute(clauseelement, *multiparams, **params)
+                    try:
+                        res = conn.execute(clauseelement, *multiparams, **params)
+                    except Exception as first_exc:
+                        # Attempt to run SELECT on other enabled nodes in case chosen node failed
+                        nodes = list(self._lb._nodes.values())
+                        tried = set()
+                        # find the node corresponding to target_engine and mark tried
+                        for n in nodes:
+                            if n.engine == target_engine:
+                                tried.add(n.name)
+                                break
+
+                        res = None
+                        for n in nodes:
+                            if n.name in tried or not n.enabled:
+                                continue
+                            try:
+                                with n.engine.connect() as alt_conn:
+                                    res = alt_conn.execute(clauseelement, *multiparams, **params)
+                                    target_engine = n.engine
+                                    print(f"[ProxyConnection] Retried SELECT on {n.name}")
+                                    break
+                            except Exception:
+                                continue
+                        if res is None:
+                            # re-raise original exception if all retries failed
+                            raise first_exc
                     try:
                         rows = [dict(r) for r in res.mappings().all()]
                     except Exception:
@@ -162,7 +214,8 @@ class ProxyConnection:
         if qtype == "DML":
             enabled_engines = self._lb.route_dml(sql)
             disabled_nodes = self._lb.get_disabled_nodes()
-            command = self._parser.to_command(sql, params)
+            # extract optional command object passed by caller (API)
+            command = params.pop("_command_obj", None)
 
             first_rows = None
 
@@ -177,8 +230,12 @@ class ProxyConnection:
                             first_rows = []
 
             for node in disabled_nodes:
-                print(f"[CommandLog] {node.name} DOWN → storing command")
-                self._command_logs[node.name].add(command)
+                if command is not None:
+                    print(f"[CommandLog] {node.name} DOWN → storing command")
+                    try:
+                        self._command_logs[node.name].add(command)
+                    except Exception:
+                        pass
 
             return SimpleResult(first_rows or [])
 
@@ -223,4 +280,4 @@ class FrontendProxyEngine:
     def begin(self):
         # get engines for broadcast (all enabled nodes)
         engines = self.lb.route_dml("BEGIN")
-        return ProxyTransaction(engines)
+        return ProxyTransaction(engines, self.lb, self.command_logs, self.parser)
