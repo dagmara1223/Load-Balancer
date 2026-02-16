@@ -73,9 +73,9 @@ Strategies can be swapped without changing core logic.
 
 ## 🤖 Running the application 
 
-### Środowisko Python
+### Python
 
-Uruchom backend FastAPI:
+Run the FastAPI backend:
 
 ```bash
 python -m uvicorn demo_app.main:app --reload
@@ -83,37 +83,42 @@ python -m uvicorn demo_app.main:app --reload
 
 ### Frontend
 
-1. Uruchom prosty serwer HTTP w katalogu frontendu:
+1. Start a simple HTTP server in the frontend directory:
 
 ```bash
 python3 -m http.server 5500 --directory demo_app/frontend
 ```
 
-2. Otwórz przeglądarkę pod adresem:
+❗ If this version does not work try: 
+```bash
+python -m http.server 5500 --directory demo_app/frontend
+```
+
+2. Open your browser at:
    [http://127.0.0.1:5500/](http://127.0.0.1:5500/)
 
 ## Docker
 
-1. W katalogu z `docker-compose.yml` uruchom kontenery:
+1. In the directory with `docker-compose.yml`, start the containers:
 
 ```bash
 docker compose up -d
 ```
 
-2. Sprawdź działające kontenery:
+2. Check running containers:
 
 ```bash
 docker ps
 ```
 
-3. Włączanie i wyłączanie kontenerów (`mysql1`, `mysql2`, `mysql3`, `mysql4`, `mysql5`):
+3. Starting and stopping containers (`mysql1`, `mysql2`, `mysql3`, `mysql4`, `mysql5`):
 
 ```bash
 docker stop mysql1
 docker start mysql1
 ```
 
-4. Sprawdzenie zawartości bazy danych z poziomu terminala (hasło: `root`):
+4. Checking database contents from the terminal(hasło: `root`):
 
 ```bash
 docker exec -it mysql1 mysql -u root -proot
