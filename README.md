@@ -51,6 +51,17 @@ https://github.com/dagmara1223/Load-Balancer/blob/main/dp_documentation_after_do
 
 <img width="1432" height="990" alt="image" src="https://github.com/user-attachments/assets/5d14de69-2bf8-4b8c-aa48-661fd8deca58" /> <br>
 
+### Frontend Application <br>
+<img width="800" height="911" alt="image" src="https://github.com/user-attachments/assets/b53ef21e-4423-40f4-87c7-c3ef24ce0543" /> <br> 
+
+A lightweight demo frontend that allows users to interact with the load balancer API. It provides simple controls to: 
+- view active database nodes,
+- choose a load balancing strategy,
+- execute basic SQL operations (SELECT, INSERT, UPDATE, DELETE),
+- and display API responses and logs in real time.
+<br> 
+The frontend serves as a testing and visualization layer for demonstrating routing, failover, and query handling behavior of the load balancer.
+
 ## 🎨 Design Patterns Used <br> 
 - **Observer** <br>
 Used for monitoring database node availability. <br>
@@ -97,7 +108,7 @@ python -m http.server 5500 --directory demo_app/frontend
 2. Open your browser at:
    [http://127.0.0.1:5500/](http://127.0.0.1:5500/)
 
-## Docker
+### Docker
 
 1. In the directory with `docker-compose.yml`, start the containers:
 
@@ -129,3 +140,9 @@ SELECT * FROM users;
 ```bash
 docker exec -i mysql1 mysql -u root -proot -e "USE app; SELECT * FROM users;"
 ```
+
+## 💫 Demo and visualization 
+
+1️⃣ All databases have the same data: <br> 
+
+
